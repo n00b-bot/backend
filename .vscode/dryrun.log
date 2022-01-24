@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/nothing/backend'
+docker run --name database -p 5432:5432 -e POSTGRES_PASSWORD=nothing -e POSTGRES_USER=nothing -d postgres:12-alpine
+make: Leaving directory '/home/nothing/backend'
+ 
