@@ -75,29 +75,31 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
-		result.FromAccount, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
-			ID:      arg.FromAccountID,
-			Ammount: -arg.Amount,
-		})
-		if err != nil {
-			return err
+		if arg.FromAccountID < arg.ToAccountID {
+			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
+		} else {
+			result.ToAccount, result.FromAccount, err = addMoney(ctx, q, arg.ToAccountID, arg.Amount, arg.FromAccountID, -arg.Amount)
 		}
-		result.ToAccount, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
-			ID:      arg.ToAccountID,
-			Ammount: arg.Amount,
-		})
 		if err != nil {
-			return err
+			return nil
 		}
 		return nil
 	})
 	return result, err
 }
 
-func addMoney(ctx context.Context,q *Queries,accountID1 int64,amount1 float64,accountID2 int64,amount2 float64) (account1 Account, account2 Account,err error) {
-	account1,err= q.AddAccountBalane(ctx,AddAccountBalaneParams{
+func addMoney(ctx context.Context, q *Queries, accountID1 int64, amount1 float64, accountID2 int64, amount2 float64) (account1 Account, account2 Account, err error) {
+	account1, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
 		Ammount: amount1,
-		ID: accountID1,
+		ID:      accountID1,
 	})
-	
+	if err != nil {
+		return
+	}
+	account2, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
+		Ammount: amount2,
+		ID:      accountID2,
+	})
+	return
+
 }
