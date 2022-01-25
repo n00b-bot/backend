@@ -35,9 +35,9 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type TransferTxParams struct {
-	FromAccountID int64 `json:"from_account_id"`
-	ToAccountID   int64 `json:"to_account_id"`
-	Amount        int64 `json:"amount"`
+	FromAccountID int64   `json:"from_account_id"`
+	ToAccountID   int64   `json:"to_account_id"`
+	Amount        float64 `json:"amount"`
 }
 
 type TransferTxResult struct {
@@ -58,24 +58,46 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			Amount:        float64(arg.Amount),
 		})
 		if err != nil {
-			return nil
+			return err
 		}
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
 			Amount:    -float64(arg.Amount),
 		})
 		if err != nil {
-			return nil
+			return err
 		}
 		result.ToEmtry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.ToAccountID,
 			Amount:    float64(arg.Amount),
 		})
 		if err != nil {
-			return nil
+			return err
 		}
 
+		result.FromAccount, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
+			ID:      arg.FromAccountID,
+			Ammount: -arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+		result.ToAccount, err = q.AddAccountBalane(ctx, AddAccountBalaneParams{
+			ID:      arg.ToAccountID,
+			Ammount: arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 	return result, err
+}
+
+func addMoney(ctx context.Context,q *Queries,accountID1 int64,amount1 float64,accountID2 int64,amount2 float64) (account1 Account, account2 Account,err error) {
+	account1,err= q.AddAccountBalane(ctx,AddAccountBalaneParams{
+		Ammount: amount1,
+		ID: accountID1,
+	})
+	
 }

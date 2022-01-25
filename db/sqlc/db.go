@@ -22,6 +22,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.addAccountBalaneStmt, err = db.PrepareContext(ctx, addAccountBalane); err != nil {
+		return nil, fmt.Errorf("error preparing query AddAccountBalane: %w", err)
+	}
 	if q.createAccountStmt, err = db.PrepareContext(ctx, createAccount); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateAccount: %w", err)
 	}
@@ -36,6 +39,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getAccountStmt, err = db.PrepareContext(ctx, getAccount); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAccount: %w", err)
+	}
+	if q.getAccountForUpdateStmt, err = db.PrepareContext(ctx, getAccountForUpdate); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAccountForUpdate: %w", err)
 	}
 	if q.getEntryStmt, err = db.PrepareContext(ctx, getEntry); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEntry: %w", err)
@@ -60,6 +66,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.addAccountBalaneStmt != nil {
+		if cerr := q.addAccountBalaneStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addAccountBalaneStmt: %w", cerr)
+		}
+	}
 	if q.createAccountStmt != nil {
 		if cerr := q.createAccountStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createAccountStmt: %w", cerr)
@@ -83,6 +94,11 @@ func (q *Queries) Close() error {
 	if q.getAccountStmt != nil {
 		if cerr := q.getAccountStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAccountStmt: %w", cerr)
+		}
+	}
+	if q.getAccountForUpdateStmt != nil {
+		if cerr := q.getAccountForUpdateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAccountForUpdateStmt: %w", cerr)
 		}
 	}
 	if q.getEntryStmt != nil {
@@ -152,35 +168,39 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                 DBTX
-	tx                 *sql.Tx
-	createAccountStmt  *sql.Stmt
-	createEntryStmt    *sql.Stmt
-	createTransferStmt *sql.Stmt
-	deleteAcccountStmt *sql.Stmt
-	getAccountStmt     *sql.Stmt
-	getEntryStmt       *sql.Stmt
-	getTransferStmt    *sql.Stmt
-	listAccountsStmt   *sql.Stmt
-	listEntriesStmt    *sql.Stmt
-	listTransferStmt   *sql.Stmt
-	updateAccountStmt  *sql.Stmt
+	db                      DBTX
+	tx                      *sql.Tx
+	addAccountBalaneStmt    *sql.Stmt
+	createAccountStmt       *sql.Stmt
+	createEntryStmt         *sql.Stmt
+	createTransferStmt      *sql.Stmt
+	deleteAcccountStmt      *sql.Stmt
+	getAccountStmt          *sql.Stmt
+	getAccountForUpdateStmt *sql.Stmt
+	getEntryStmt            *sql.Stmt
+	getTransferStmt         *sql.Stmt
+	listAccountsStmt        *sql.Stmt
+	listEntriesStmt         *sql.Stmt
+	listTransferStmt        *sql.Stmt
+	updateAccountStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                 tx,
-		tx:                 tx,
-		createAccountStmt:  q.createAccountStmt,
-		createEntryStmt:    q.createEntryStmt,
-		createTransferStmt: q.createTransferStmt,
-		deleteAcccountStmt: q.deleteAcccountStmt,
-		getAccountStmt:     q.getAccountStmt,
-		getEntryStmt:       q.getEntryStmt,
-		getTransferStmt:    q.getTransferStmt,
-		listAccountsStmt:   q.listAccountsStmt,
-		listEntriesStmt:    q.listEntriesStmt,
-		listTransferStmt:   q.listTransferStmt,
-		updateAccountStmt:  q.updateAccountStmt,
+		db:                      tx,
+		tx:                      tx,
+		addAccountBalaneStmt:    q.addAccountBalaneStmt,
+		createAccountStmt:       q.createAccountStmt,
+		createEntryStmt:         q.createEntryStmt,
+		createTransferStmt:      q.createTransferStmt,
+		deleteAcccountStmt:      q.deleteAcccountStmt,
+		getAccountStmt:          q.getAccountStmt,
+		getAccountForUpdateStmt: q.getAccountForUpdateStmt,
+		getEntryStmt:            q.getEntryStmt,
+		getTransferStmt:         q.getTransferStmt,
+		listAccountsStmt:        q.listAccountsStmt,
+		listEntriesStmt:         q.listEntriesStmt,
+		listTransferStmt:        q.listTransferStmt,
+		updateAccountStmt:       q.updateAccountStmt,
 	}
 }

@@ -10,14 +10,15 @@ import (
 )
 
 var testQueries *Queries
-
+var conn *sql.DB
 const (
 	dbDriver = "postgres"
 	dbSource = "postgresql://nothing:nothing@localhost:5432/bank?sslmode=disable"
 )
 
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(dbDriver, dbSource)
+	var err error
+	conn, err = sql.Open(dbDriver, dbSource)
 	if err != nil {
 		log.Fatalln(err)
 	}
