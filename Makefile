@@ -12,5 +12,8 @@ down:
 	migrate -path db/migration -database "postgresql://nothing:nothing@localhost:5432/bank?sslmode=disable" -verbose down
 sqlc:
 	sqlc generate
-
-.PHONY: createdb dropdb postgres up down sqlc
+server:
+	go run main.go
+reload:
+	air
+.PHONY: createdb dropdb postgres up down sqlc reload server
